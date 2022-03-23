@@ -1,0 +1,26 @@
+{
+  "name": "graphql-codegen-ariadne",
+  "version": "1.0.0",
+  "description": "Generate Python types from GraphQL files",
+  "main": "lib/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "nodemon -w . -e ts,json --exec 'npm run build || exit 1'",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JRasmusBm/graphql-codegen-ariadne.git"
+  },
+  "author": "JRasmusBm",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JRasmusBm/graphql-codegen-ariadne/issues"
+  },
+  "homepage": "https://github.com/JRasmusBm/graphql-codegen-ariadne#readme",
+  "devDependencies": {
+    "@graphql-codegen/plugin-helpers": "^2.4.2",
+    "graphql": "^16.3.0",
+    "nodemon": "^2.0.15"
+  }
+}
