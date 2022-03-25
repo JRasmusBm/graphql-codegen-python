@@ -1,4 +1,4 @@
-import { transform } from "../../lib";
+import * as ast from "../../lib/ast";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 
 describe("Type discovery", (): void => {
@@ -14,7 +14,7 @@ describe("Type discovery", (): void => {
     `;
 
     const schema = makeExecutableSchema({ typeDefs: input });
-    const internalRepresentation = transform(schema);
+    const internalRepresentation = ast.fromSchema(schema);
 
     expect(
       internalRepresentation.nodes
@@ -35,7 +35,7 @@ describe("Type discovery", (): void => {
     `;
 
     const schema = makeExecutableSchema({ typeDefs: input });
-    const internalRepresentation = transform(schema);
+    const internalRepresentation = ast.fromSchema(schema);
 
     expect(
       internalRepresentation.nodes
@@ -56,7 +56,7 @@ describe("Type discovery", (): void => {
     `;
 
     const schema = makeExecutableSchema({ typeDefs: input });
-    const internalRepresentation = transform(schema);
+    const internalRepresentation = ast.fromSchema(schema);
 
     expect(
       internalRepresentation.nodes
@@ -77,7 +77,7 @@ describe("Type discovery", (): void => {
       `;
 
     const schema = makeExecutableSchema({ typeDefs: input });
-    const internalRepresentation = transform(schema);
+    const internalRepresentation = ast.fromSchema(schema);
 
     expect(
       internalRepresentation.nodes
