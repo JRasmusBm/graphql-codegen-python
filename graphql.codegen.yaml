@@ -1,0 +1,6 @@
+overwrite: true
+schema: "./sample_schemas"
+generates:
+  ./sample_output/_graphql_types.py:
+    plugins:
+      - "./dist/lib/index.js"

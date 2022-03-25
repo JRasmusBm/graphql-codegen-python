@@ -5,9 +5,11 @@
   "main": "lib/index.ts",
   "scripts": {
     "build": "tsc",
-    "build:watch": "nodemon -w src -e ts,json --exec 'npm run build || exit 1'",
+    "build:watch": "nodemon -w . -e 'ts,json' --exec 'npm run build || exit 1'",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "generate": "graphql-codegen -c ./graphql.codegen.yaml",
+    "generate:watch": "nodemon -w dist -e js --exec 'npm run generate -- --watch || exit 1'"
   },
   "repository": {
     "type": "git",
@@ -27,6 +29,7 @@
     "@graphql-tools/schema": "^8.3.5"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^2.6.2",
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
     "nodemon": "^2.0.15",
