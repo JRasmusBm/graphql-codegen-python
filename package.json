@@ -1,12 +1,13 @@
 {
   "name": "graphql-codegen-ariadne",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Generate Python types from GraphQL files",
   "main": "lib/index.ts",
   "scripts": {
     "build": "tsc",
-    "build:watch": "nodemon -w . -e ts,json --exec 'npm run build || exit 1'",
-    "test": "jest"
+    "build:watch": "nodemon -w src -e ts,json --exec 'npm run build || exit 1'",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "repository": {
     "type": "git",
@@ -18,9 +19,17 @@
     "url": "https://github.com/JRasmusBm/graphql-codegen-ariadne/issues"
   },
   "homepage": "https://github.com/JRasmusBm/graphql-codegen-ariadne#readme",
-  "devDependencies": {
+  "peerDependencies": {
+    "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0"
+  },
+  "dependencies": {
     "@graphql-codegen/plugin-helpers": "^2.4.2",
-    "graphql": "^16.3.0",
-    "nodemon": "^2.0.15"
+    "@graphql-tools/schema": "^8.3.5"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "jest": "^27.5.1",
+    "nodemon": "^2.0.15",
+    "ts-jest": "^27.1.3"
   }
 }
