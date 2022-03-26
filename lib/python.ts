@@ -1,3 +1,11 @@
+import {
+  FieldDefinitionNode,
+  GraphQLSchema,
+  Kind,
+  NamedTypeNode,
+  NonNullTypeNode,
+  ObjectTypeDefinitionNode,
+} from "graphql";
 import * as ast from "./ast";
 
 const indent = " ".repeat(4);
@@ -10,30 +18,44 @@ const typeHandler = ({ optional, ...fieldType }: ast.InternalType) => {
   return fieldType.name;
 };
 
-const fieldHandler = (field: ast.InternalField) => {
-  return `${field[0]}: ${typeHandler(field[1])}`;
-};
+const pythonBuiltinTypes = {
+  'String': 'str'
+}
 
 const nodeHandlers = {
-  type: (node: ast.ASTKindToInternalNode["type"]) => {
-    return `class ${node.name}:
-${indent}${
-      node.fields?.length
-        ? node.fields.map(fieldHandler).join(`\n${indent}`)
-        : "pass"
-    }`;
+  [Kind.NON_NULL_TYPE]: (node: NonNullTypeNode) => {
+    return toPython(node.type)
+  },
+  [Kind.NAMED_TYPE]: (node: NamedTypeNode) => {
+    return pythonBuiltinTypes[node.name.value] || node.name.value;
+  },
+  [Kind.FIELD_DEFINITION]: (node: FieldDefinitionNode) => {
+    return `${node.name.value}: ${toPython(node.type) || 'None'}`;
+  },
+  [Kind.OBJECT_TYPE_DEFINITION]: (node: ObjectTypeDefinitionNode) => {
+    const fields = node.fields?.map(toPython).filter(Boolean);
+
+    return `class ${node.name.value}:
+${indent}${fields.length ? fields.join("\n") : "pass"}`;
   },
 };
 
-export function fromAST({ nodes }: ast.AST): string {
-  return nodes
-    .map((node) => {
-      const handler = nodeHandlers[node.kind];
+const toPython = (node): string | null => {
+  if (node.astNode) {
+    node = node.astNode;
+  }
 
-      if (handler) {
-        return handler(node);
-      }
-    })
-    .filter(Boolean)
-    .join("\n");
+  const handler = nodeHandlers[node.kind];
+
+  if (handler) {
+    return handler(node);
+  }
+
+  return null;
+};
+
+export function fromSchema(schema: GraphQLSchema): string {
+  const typeMap = schema.getTypeMap();
+
+  return Object.values(typeMap).map(toPython).filter(Boolean).join("\n\n");
 }
