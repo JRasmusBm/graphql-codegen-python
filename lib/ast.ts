@@ -6,10 +6,12 @@ import {
   TypeNode,
 } from "graphql";
 
-type InternalNode = { kind: "type"; name: string };
+export type InternalType = { name: string; optional?: boolean };
+export type InternalField = [string, InternalType];
+export type InternalNode = { kind: "type"; name: string; fields: InternalField[] };
 
 export type ASTKindToInternalNode = {
-  [TNode in InternalNode as TNode['kind']]: TNode;
+  [TNode in InternalNode as TNode["kind"]]: TNode;
 };
 
 export interface AST {
@@ -32,7 +34,7 @@ type NodeHandlers = {
 const nodeHandlers: NodeHandlers = {
   [Kind.OBJECT_TYPE_DEFINITION]: (node) => {
     return [
-      { kind: "type", name: node.name.value },
+      { kind: "type", name: node.name.value, fields: [] },
       node.fields?.map((f) => extractTypeName(f.type)).filter(Boolean),
     ];
   },
