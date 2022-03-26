@@ -6,10 +6,14 @@ import {
   TypeNode,
 } from "graphql";
 
-type InternalRepresentationNode = { kind: "type"; name: string };
+type InternalNode = { kind: "type"; name: string };
+
+export type ASTKindToInternalNode = {
+  [TNode in InternalNode as TNode['kind']]: TNode;
+};
 
 export interface AST {
-  nodes: InternalRepresentationNode[];
+  nodes: InternalNode[];
 }
 
 function extractTypeName(typeNode: TypeNode) {
@@ -23,7 +27,7 @@ function extractTypeName(typeNode: TypeNode) {
 type NodeHandlers = {
   [Key in GraphQLNamedType["astNode"]["kind"]]?: (
     node: ASTKindToNode[Key]
-  ) => [InternalRepresentationNode, string[]];
+  ) => [InternalNode, string[]];
 };
 const nodeHandlers: NodeHandlers = {
   [Kind.OBJECT_TYPE_DEFINITION]: (node) => {
@@ -34,9 +38,7 @@ const nodeHandlers: NodeHandlers = {
   },
 };
 
-function fromNode(
-  node: GraphQLNamedType
-): [InternalRepresentationNode | null, string[]] {
+function fromNode(node: GraphQLNamedType): [InternalNode | null, string[]] {
   const nodeHandler = nodeHandlers[node?.astNode?.kind];
 
   if (!nodeHandler) {
