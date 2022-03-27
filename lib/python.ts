@@ -97,7 +97,7 @@ const nodeHandlers = {
 
     return [
       `class ${node.name.value}${parentType}:
-${indent}${fields.length ? fields.join("\n") : "pass"}`,
+${indent}${fields.length ? fields.join(`\n${indent}`) : "pass"}`,
       imports,
     ];
   },
