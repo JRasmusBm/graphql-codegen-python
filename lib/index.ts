@@ -1,5 +1,4 @@
 import { GraphQLSchema } from "graphql";
-import * as ast from "./ast";
 import * as python from "./python";
 
 import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
@@ -11,9 +10,5 @@ export const plugin: PluginFunction<Partial<PluginConfig>, string> = (
   _documents: Types.DocumentFile[],
   _config: PluginConfig
 ) => {
-  const internalRepresentation = ast.fromSchema(schema);
-
-  const pythonCode = python.fromAST(internalRepresentation);
-
-  return pythonCode;
+  return python.fromSchema(schema);
 };

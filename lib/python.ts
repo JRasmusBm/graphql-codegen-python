@@ -17,27 +17,61 @@ enum ExtraKind {
   OPTIONAL_TYPE = "ExtraNodeOptionalType",
 }
 
+type Imports = Record<string, Set<string>>;
+function mergeImports(
+  imports: Imports,
+  newImports: Record<string, Set<string> | string[]>
+): Imports {
+  for (const module in newImports) {
+    for (const item of newImports[module]) {
+      if (!imports[module]) {
+        imports[module] = new Set();
+      }
+
+      imports[module].add(item);
+    }
+  }
+
+  return imports;
+}
+
 const nodeHandlers = {
-  [ExtraKind.OPTIONAL_TYPE]: (node) => {
-    return `Optional[${toPython(node.type)}]`;
+  [ExtraKind.OPTIONAL_TYPE]: function handleOptionalTypeNode(node) {
+    const [code, imports] = toPython(node.type);
+
+    return [
+      `Optional[${code}]`,
+      mergeImports(imports, { typing: ["Optional"] }),
+    ];
   },
-  [Kind.NON_NULL_TYPE]: (node: NonNullTypeNode) => {
+  [Kind.NON_NULL_TYPE]: function handleNonNullTypeNode(node: NonNullTypeNode) {
     return toPython(node.type);
   },
-  [Kind.LIST_TYPE]: (node: NonNullTypeNode) => {
-    return `List[${toPython(node.type)}]`;
-  },
-  [Kind.NAMED_TYPE]: (node: NamedTypeNode) => {
-    return pythonBuiltinTypes[node.name.value] || node.name.value;
-  },
-  [Kind.FIELD_DEFINITION]: (node: FieldDefinitionNode) => {
-    return `${node.name.value}: ${toPython(node.type) || "None"}`;
-  },
-  [Kind.OBJECT_TYPE_DEFINITION]: (node: ObjectTypeDefinitionNode) => {
-    const fields = node.fields?.map(toPython).filter(Boolean);
+  [Kind.LIST_TYPE]: function handleNonNullTypeNode(node: NonNullTypeNode) {
+    const [code, imports] = toPython(node.type);
 
-    return `class ${node.name.value}:
-${indent}${fields.length ? fields.join("\n") : "pass"}`;
+    return [`List[${code}]`, mergeImports(imports, { typing: ["List"] })];
+  },
+  [Kind.NAMED_TYPE]: function handleNamedTypeNode(node: NamedTypeNode) {
+    return [pythonBuiltinTypes[node.name.value] || node.name.value, {}];
+  },
+  [Kind.FIELD_DEFINITION]: function handleFieldDefinitionNode(
+    node: FieldDefinitionNode
+  ) {
+    const [code, imports] = toPython(node.type);
+
+    return [`${node.name.value}: ${code || "None"}`, imports];
+  },
+  [Kind.OBJECT_TYPE_DEFINITION]: function handleObjectTypeDefinitionNode(
+    node: ObjectTypeDefinitionNode
+  ) {
+    const [fields, imports] = listToPython(node.fields);
+
+    return [
+      `class ${node.name.value}:
+${indent}${fields.length ? fields.join("\n") : "pass"}`,
+      imports,
+    ];
   },
 };
 
@@ -61,11 +95,29 @@ function patchNode(node) {
   return node;
 }
 
-const toPython = (node): string | null => {
+function listToPython(nodeList): [string[], Imports] {
+  const items = [];
+  let imports = {};
+
+  for (const node of nodeList || []) {
+    const [code, currentImports] = toPython(node);
+
+    if (!code) {
+      continue;
+    }
+
+    imports = mergeImports(imports, currentImports);
+    items.push(code);
+  }
+
+  return [items, imports];
+}
+
+const toPython = (node): [string | null, Imports] => {
   node = patchNode(node);
 
   if (!node.kind) {
-    return null;
+    return [null, {}];
   }
 
   const handler = nodeHandlers[node.kind];
@@ -73,7 +125,7 @@ const toPython = (node): string | null => {
   if (!handler) {
     console.warn(`Could not find handler for ${node.kind}`);
 
-    return null;
+    return [null, {}];
   }
 
   return handler(node);
@@ -81,6 +133,12 @@ const toPython = (node): string | null => {
 
 export function fromSchema(schema: GraphQLSchema): string {
   const typeMap = schema.getTypeMap();
+  const [items, imports] = listToPython(Object.values(typeMap));
 
-  return Object.values(typeMap).map(toPython).filter(Boolean).join("\n\n");
+  const importStatements = Object.entries(imports).map(
+    ([module, items]) =>
+      `from ${module} import ${Array.from(items).sort().join(", ")}`
+  ).join("\n");
+
+  return [importStatements, ...items].filter(Boolean).join("\n\n");
 }

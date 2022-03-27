@@ -5,17 +5,34 @@ describe("Field Types", (): void => {
   interface Case {
     graphqlType: string;
     pythonType: string;
+    imports?: string;
   }
 
   const cases: Case[] = [
     { graphqlType: "String!", pythonType: "str" },
-    { graphqlType: "String", pythonType: "Optional[str]" },
-    { graphqlType: "[String!]!", pythonType: "List[str]" },
-    { graphqlType: "[String]", pythonType: "Optional[List[Optional[str]]]" },
-    { graphqlType: "[String]!", pythonType: "List[Optional[str]]" },
+    {
+      graphqlType: "String",
+      pythonType: "Optional[str]",
+      imports: "from typing import Optional",
+    },
+    {
+      graphqlType: "[String!]!",
+      pythonType: "List[str]",
+      imports: "from typing import List",
+    },
+    {
+      graphqlType: "[String]",
+      pythonType: "Optional[List[Optional[str]]]",
+      imports: "from typing import List, Optional",
+    },
+    {
+      graphqlType: "[String]!",
+      pythonType: "List[Optional[str]]",
+      imports: "from typing import List, Optional",
+    },
   ];
 
-  cases.forEach(({ graphqlType, pythonType }) => {
+  cases.forEach(({ graphqlType, pythonType, imports }) => {
     it(`${graphqlType} -> ${pythonType}`, async (): Promise<void> => {
       const input = `
     type Hello {
@@ -25,7 +42,9 @@ describe("Field Types", (): void => {
 
       const schema = makeExecutableSchema({ typeDefs: input });
 
-      expect(python.fromSchema(schema)).toEqual(`class Hello:
+      imports = imports ? imports + "\n\n" : "";
+
+      expect(python.fromSchema(schema)).toEqual(`${imports}class Hello:
     greeting: ${pythonType}`);
     });
   });
