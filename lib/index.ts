@@ -3,12 +3,12 @@ import * as python from "./python";
 
 import { PluginFunction, Types } from "@graphql-codegen/plugin-helpers";
 
-interface PluginConfig {}
+type PluginConfig = python.FromSchemaConfig
 
 export const plugin: PluginFunction<Partial<PluginConfig>, string> = (
   schema: GraphQLSchema,
   _documents: Types.DocumentFile[],
-  _config: PluginConfig
+  config: PluginConfig
 ) => {
-  return python.fromSchema(schema);
+  return python.fromSchema(schema, config);
 };

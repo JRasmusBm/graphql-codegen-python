@@ -36,39 +36,63 @@ function mergeImports(
 }
 
 const nodeHandlers = {
-  [ExtraKind.OPTIONAL_TYPE]: function handleOptionalTypeNode(node) {
-    const [code, imports] = toPython(node.type);
+  [ExtraKind.OPTIONAL_TYPE]: function handleOptionalTypeNode(
+    node,
+    config: FromSchemaConfig
+  ) {
+    const [code, imports] = toPython(node.type, config);
 
     return [
       `Optional[${code}]`,
       mergeImports(imports, { typing: ["Optional"] }),
     ];
   },
-  [Kind.NON_NULL_TYPE]: function handleNonNullTypeNode(node: NonNullTypeNode) {
-    return toPython(node.type);
+  [Kind.NON_NULL_TYPE]: function handleNonNullTypeNode(
+    node: NonNullTypeNode,
+    config: FromSchemaConfig
+  ) {
+    return toPython(node.type, config);
   },
-  [Kind.LIST_TYPE]: function handleNonNullTypeNode(node: NonNullTypeNode) {
-    const [code, imports] = toPython(node.type);
+  [Kind.LIST_TYPE]: function handleNonNullTypeNode(
+    node: NonNullTypeNode,
+    config: FromSchemaConfig
+  ) {
+    const [code, imports] = toPython(node.type, config);
 
     return [`List[${code}]`, mergeImports(imports, { typing: ["List"] })];
   },
-  [Kind.NAMED_TYPE]: function handleNamedTypeNode(node: NamedTypeNode) {
+  [Kind.NAMED_TYPE]: function handleNamedTypeNode(
+    node: NamedTypeNode,
+    config: FromSchemaConfig
+  ) {
     return [pythonBuiltinTypes[node.name.value] || node.name.value, {}];
   },
   [Kind.FIELD_DEFINITION]: function handleFieldDefinitionNode(
-    node: FieldDefinitionNode
+    node: FieldDefinitionNode,
+    config: FromSchemaConfig
   ) {
-    const [code, imports] = toPython(node.type);
+    const [code, imports] = toPython(node.type, config);
 
     return [`${node.name.value}: ${code || "None"}`, imports];
   },
   [Kind.OBJECT_TYPE_DEFINITION]: function handleObjectTypeDefinitionNode(
-    node: ObjectTypeDefinitionNode
+    node: ObjectTypeDefinitionNode,
+    config: FromSchemaConfig
   ) {
-    const [fields, imports] = listToPython(node.fields);
+    let [fields, imports] = listToPython(node.fields, config);
+    let parentType = "";
+
+    if (config.super) {
+      if (config.super.module) {
+        imports = mergeImports(imports, {
+          [config.super.module]: [config.super.parentType],
+        });
+      }
+      parentType = `(${config.super.parentType})`;
+    }
 
     return [
-      `class ${node.name.value}:
+      `class ${node.name.value}${parentType}:
 ${indent}${fields.length ? fields.join("\n") : "pass"}`,
       imports,
     ];
@@ -95,12 +119,12 @@ function patchNode(node) {
   return node;
 }
 
-function listToPython(nodeList): [string[], Imports] {
+function listToPython(nodeList, config: FromSchemaConfig): [string[], Imports] {
   const items = [];
   let imports = {};
 
   for (const node of nodeList || []) {
-    const [code, currentImports] = toPython(node);
+    const [code, currentImports] = toPython(node, config);
 
     if (!code) {
       continue;
@@ -113,7 +137,7 @@ function listToPython(nodeList): [string[], Imports] {
   return [items, imports];
 }
 
-const toPython = (node): [string | null, Imports] => {
+const toPython = (node, config: FromSchemaConfig): [string | null, Imports] => {
   node = patchNode(node);
 
   if (!node.kind) {
@@ -128,17 +152,26 @@ const toPython = (node): [string | null, Imports] => {
     return [null, {}];
   }
 
-  return handler(node);
+  return handler(node, config);
 };
 
-export function fromSchema(schema: GraphQLSchema): string {
-  const typeMap = schema.getTypeMap();
-  const [items, imports] = listToPython(Object.values(typeMap));
+interface FromSchemaConfig {
+  super?: { module?: string, parentType: string };
+}
 
-  const importStatements = Object.entries(imports).map(
-    ([module, items]) =>
-      `from ${module} import ${Array.from(items).sort().join(", ")}`
-  ).join("\n");
+export function fromSchema(
+  schema: GraphQLSchema,
+  config: FromSchemaConfig = {}
+): string {
+  const typeMap = schema.getTypeMap();
+  const [items, imports] = listToPython(Object.values(typeMap), config);
+
+  const importStatements = Object.entries(imports)
+    .map(
+      ([module, items]) =>
+        `from ${module} import ${Array.from(items).sort().join(", ")}`
+    )
+    .join("\n");
 
   return [importStatements, ...items].filter(Boolean).join("\n\n");
 }
