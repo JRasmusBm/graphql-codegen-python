@@ -10,7 +10,11 @@ import {
 const indent = " ".repeat(4);
 
 const pythonBuiltinTypes = {
+  Int: "int",
+  Float: "float",
   String: "str",
+  Boolean: "bool",
+  ID: "str",
 };
 
 enum ExtraKind {
@@ -156,7 +160,7 @@ const toPython = (node, config: FromSchemaConfig): [string | null, Imports] => {
 };
 
 interface FromSchemaConfig {
-  super?: { module?: string, parentType: string };
+  super?: { module?: string; parentType: string };
 }
 
 export function fromSchema(
