@@ -5,6 +5,7 @@ import {
   NamedTypeNode,
   NonNullTypeNode,
   ObjectTypeDefinitionNode,
+  UnionTypeDefinitionNode,
 } from "graphql";
 
 const indent = " ".repeat(4);
@@ -78,6 +79,17 @@ const nodeHandlers = {
     const [code, imports] = toPython(node.type, config);
 
     return [`${node.name.value}: ${code || "None"}`, imports];
+  },
+  [Kind.UNION_TYPE_DEFINITION]: function handleUnionTypeDefinitionNode(
+    node: UnionTypeDefinitionNode,
+    config: FromSchemaConfig
+  ) {
+    let [types, imports] = listToPython(node.types, config);
+
+    return [
+      `${node.name.value} = Union[${types.join(", ")}]`,
+      mergeImports(imports, { typing: ["Union"] }),
+    ];
   },
   [Kind.OBJECT_TYPE_DEFINITION]: function handleObjectTypeDefinitionNode(
     node: ObjectTypeDefinitionNode,
