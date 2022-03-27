@@ -46,7 +46,7 @@ function patchNode(node) {
     node = node.astNode;
   }
 
-  if ([Kind.FIELD_DEFINITION].includes(node.kind)) {
+  if ([Kind.FIELD_DEFINITION, Kind.LIST_TYPE].includes(node.kind)) {
     if (node.type.kind !== Kind.NON_NULL_TYPE) {
       return {
         ...node,

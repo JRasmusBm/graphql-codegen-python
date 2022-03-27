@@ -11,6 +11,8 @@ describe("Field Types", (): void => {
     { graphqlType: "String!", pythonType: "str" },
     { graphqlType: "String", pythonType: "Optional[str]" },
     { graphqlType: "[String!]!", pythonType: "List[str]" },
+    { graphqlType: "[String]", pythonType: "Optional[List[Optional[str]]]" },
+    { graphqlType: "[String]!", pythonType: "List[Optional[str]]" },
   ];
 
   cases.forEach(({ graphqlType, pythonType }) => {
