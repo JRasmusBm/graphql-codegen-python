@@ -10,18 +10,25 @@ import {
 const indent = " ".repeat(4);
 
 const pythonBuiltinTypes = {
-  'String': 'str'
+  String: "str",
+};
+
+enum ExtraKind {
+  OPTIONAL_TYPE = "ExtraNodeOptionalType",
 }
 
 const nodeHandlers = {
+  [ExtraKind.OPTIONAL_TYPE]: (node) => {
+    return `Optional[${toPython(node.type)}]`;
+  },
   [Kind.NON_NULL_TYPE]: (node: NonNullTypeNode) => {
-    return toPython(node.type)
+    return toPython(node.type);
   },
   [Kind.NAMED_TYPE]: (node: NamedTypeNode) => {
     return pythonBuiltinTypes[node.name.value] || node.name.value;
   },
   [Kind.FIELD_DEFINITION]: (node: FieldDefinitionNode) => {
-    return `${node.name.value}: ${toPython(node.type) || 'None'}`;
+    return `${node.name.value}: ${toPython(node.type) || "None"}`;
   },
   [Kind.OBJECT_TYPE_DEFINITION]: (node: ObjectTypeDefinitionNode) => {
     const fields = node.fields?.map(toPython).filter(Boolean);
@@ -31,18 +38,42 @@ ${indent}${fields.length ? fields.join("\n") : "pass"}`;
   },
 };
 
-const toPython = (node): string | null => {
+function patchNode(node) {
   if (node.astNode) {
     node = node.astNode;
   }
 
-  const handler = nodeHandlers[node.kind];
-
-  if (handler) {
-    return handler(node);
+  if ([Kind.FIELD_DEFINITION].includes(node.kind)) {
+    if (node.type.kind !== Kind.NON_NULL_TYPE) {
+      return {
+        ...node,
+        type: {
+          kind: ExtraKind.OPTIONAL_TYPE,
+          type: node.type,
+        },
+      };
+    }
   }
 
-  return null;
+  return node;
+}
+
+const toPython = (node): string | null => {
+  node = patchNode(node);
+
+  if (!node.kind) {
+    return null;
+  }
+
+  const handler = nodeHandlers[node.kind];
+
+  if (!handler) {
+    console.warn(`Could not find handler for ${node.kind}`);
+
+    return null;
+  }
+
+  return handler(node);
 };
 
 export function fromSchema(schema: GraphQLSchema): string {
