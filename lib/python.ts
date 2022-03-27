@@ -6,17 +6,8 @@ import {
   NonNullTypeNode,
   ObjectTypeDefinitionNode,
 } from "graphql";
-import * as ast from "./ast";
 
 const indent = " ".repeat(4);
-
-const typeHandler = ({ optional, ...fieldType }: ast.InternalType) => {
-  if (optional) {
-    return `Optional[${typeHandler(fieldType)}]`;
-  }
-
-  return fieldType.name;
-};
 
 const pythonBuiltinTypes = {
   'String': 'str'
