@@ -1,7 +1,7 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as python from "../../lib/python";
 
-describe("Field Types", (): void => {
+describe("Nested Types", (): void => {
   interface Case {
     graphqlType: string;
     pythonType: string;
