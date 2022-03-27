@@ -10,6 +10,7 @@ describe("Field Types", (): void => {
   const cases: Case[] = [
     { graphqlType: "String!", pythonType: "str" },
     { graphqlType: "String", pythonType: "Optional[str]" },
+    { graphqlType: "[String!]!", pythonType: "List[str]" },
   ];
 
   cases.forEach(({ graphqlType, pythonType }) => {

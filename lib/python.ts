@@ -24,6 +24,9 @@ const nodeHandlers = {
   [Kind.NON_NULL_TYPE]: (node: NonNullTypeNode) => {
     return toPython(node.type);
   },
+  [Kind.LIST_TYPE]: (node: NonNullTypeNode) => {
+    return `List[${toPython(node.type)}]`;
+  },
   [Kind.NAMED_TYPE]: (node: NamedTypeNode) => {
     return pythonBuiltinTypes[node.name.value] || node.name.value;
   },
