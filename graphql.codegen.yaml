@@ -8,5 +8,5 @@ generates:
       extraImports:
         typing:
           - Dict
-      extraScalars:
+      extraTypes:
         JSONObject: Dict

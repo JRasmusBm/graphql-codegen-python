@@ -51,7 +51,7 @@ class Hello(BaseModel):
     });
   });
 
-  describe("extraScalars", (): void => {
+  describe("extraTypes", (): void => {
     it("treats as identifier when not specified", async (): Promise<void> => {
       const input = `
     scalar JSONObject
@@ -83,7 +83,7 @@ class Hello(BaseModel):
           extraImports: {
             typing: ["Dict"],
           },
-          extraScalars: { JSONObject: "Dict" },
+          extraTypes: { JSONObject: "Dict" },
         })
       ).toEqual(`from typing import Dict
 

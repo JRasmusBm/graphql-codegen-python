@@ -73,7 +73,7 @@ const nodeHandlers = {
     node: NamedTypeNode,
     config: FromSchemaConfig
   ) {
-    const typeMap = { ...pythonBuiltinTypes, ...config.extraScalars };
+    const typeMap = { ...pythonBuiltinTypes, ...config.extraTypes };
 
     return [typeMap[node.name.value] || `"${node.name.value}"`, {}];
   },
@@ -178,7 +178,7 @@ const toPython = (node, config: FromSchemaConfig): [string | null, Imports] => {
 interface FromSchemaConfig {
   super?: string;
   extraImports?: Record<string, string[]>;
-  extraScalars?: Record<string, string>;
+  extraTypes?: Record<string, string>;
 }
 
 export function fromSchema(
