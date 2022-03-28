@@ -1,6 +1,8 @@
 import {
   FieldDefinitionNode,
   GraphQLSchema,
+  InputObjectTypeDefinitionNode,
+  InputValueDefinitionNode,
   Kind,
   NamedTypeNode,
   NonNullTypeNode,
@@ -40,7 +42,7 @@ function mergeImports(
   return imports;
 }
 
-const noopHandler = (..._args: any) => [null, {}]
+const noopHandler = (..._args: any) => [null, {}];
 
 const nodeHandlers = {
   [ExtraKind.OPTIONAL_TYPE]: function handleOptionalTypeNode(
@@ -77,6 +79,14 @@ const nodeHandlers = {
 
     return [typeMap[node.name.value] || `"${node.name.value}"`, {}];
   },
+  [Kind.INPUT_VALUE_DEFINITION]: function handleInputValueDefinitionNode(
+    node: InputValueDefinitionNode,
+    config: FromSchemaConfig
+  ) {
+    const [code, imports] = toPython(node.type, config);
+
+    return [`${node.name.value}: ${code || "None"}`, imports];
+  },
   [Kind.FIELD_DEFINITION]: function handleFieldDefinitionNode(
     node: FieldDefinitionNode,
     config: FromSchemaConfig
@@ -96,6 +106,24 @@ const nodeHandlers = {
       mergeImports(imports, { typing: ["Union"] }),
     ];
   },
+  [Kind.INPUT_OBJECT_TYPE_DEFINITION]:
+    function handleInputObjectTypeDefinitionNode(
+      node: InputObjectTypeDefinitionNode,
+      config: FromSchemaConfig
+    ) {
+      let [fields, imports] = listToPython(node.fields, config);
+      let parentType = "";
+
+      if (config.super) {
+        parentType = `(${config.super})`;
+      }
+
+      return [
+        `class ${node.name.value}${parentType}:
+${indent}${fields.length ? fields.join(`\n${indent}`) : "pass"}`,
+        imports,
+      ];
+    },
   [Kind.OBJECT_TYPE_DEFINITION]: function handleObjectTypeDefinitionNode(
     node: ObjectTypeDefinitionNode,
     config: FromSchemaConfig
@@ -120,7 +148,13 @@ function patchNode(node) {
     node = node.astNode;
   }
 
-  if ([Kind.FIELD_DEFINITION, Kind.LIST_TYPE].includes(node.kind)) {
+  if (
+    [
+      Kind.FIELD_DEFINITION,
+      Kind.LIST_TYPE,
+      Kind.INPUT_VALUE_DEFINITION,
+    ].includes(node.kind)
+  ) {
     if (node.type.kind !== Kind.NON_NULL_TYPE) {
       return {
         ...node,
@@ -175,7 +209,7 @@ const toPython = (node, config: FromSchemaConfig): [string | null, Imports] => {
   return handler(node, config);
 };
 
-interface FromSchemaConfig {
+export interface FromSchemaConfig {
   super?: string;
   extraImports?: Record<string, string[]>;
   extraTypes?: Record<string, string>;
