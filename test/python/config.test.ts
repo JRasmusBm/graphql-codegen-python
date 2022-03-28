@@ -51,6 +51,63 @@ class Hello(BaseModel):
     });
   });
 
+  describe("decorators", (): void => {
+    it(`Uses correct syntax when not specified`, async (): Promise<void> => {
+      const input = `
+    type Hello {
+      greeting: String!
+    }
+`;
+
+      const schema = makeExecutableSchema({ typeDefs: input });
+
+      expect(python.fromSchema(schema)).toEqual(`class Hello:
+    greeting: str`);
+    });
+
+    it(`Imports and displays callable syntax correctly`, async (): Promise<void> => {
+      const input = `
+    type Hello {
+      greeting: String!
+    }
+`;
+
+      const schema = makeExecutableSchema({ typeDefs: input });
+
+      expect(
+        python.fromSchema(schema, {
+          decorators: ["@dataclass(order=True)"],
+          extraImports: { dataclasses: ["dataclass"] },
+        })
+      ).toEqual(`from dataclasses import dataclass
+
+@dataclass(order=True)
+class Hello:
+    greeting: str`);
+    });
+
+    it(`Imports and displays them based on name`, async (): Promise<void> => {
+      const input = `
+    type Hello {
+      greeting: String!
+    }
+`;
+
+      const schema = makeExecutableSchema({ typeDefs: input });
+
+      expect(
+        python.fromSchema(schema, {
+          decorators: ["dataclass"],
+          extraImports: { dataclasses: ["dataclass"] },
+        })
+      ).toEqual(`from dataclasses import dataclass
+
+@dataclass
+class Hello:
+    greeting: str`);
+    });
+  });
+
   describe("extraTypes", (): void => {
     it("treats as identifier when not specified", async (): Promise<void> => {
       const input = `

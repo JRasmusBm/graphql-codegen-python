@@ -137,13 +137,20 @@ const nodeHandlers = {
     ) {
       let [fields, imports] = listToPython(node.fields, config);
       let parentType = "";
+      let decorators = "";
 
       if (config.super) {
         parentType = `(${config.super})`;
       }
 
+      if (config.decorators?.length) {
+        decorators =
+          config.decorators.map((d) => d.replace(/^[^@]/m, "@$&")).join("\n") +
+          "\n";
+      }
+
       return [
-        `class ${node.name.value}${parentType}:
+        `${decorators}class ${node.name.value}${parentType}:
 ${indent}${fields.length ? fields.join(`\n${indent}`) : "pass"}`,
         imports,
       ];
@@ -154,13 +161,20 @@ ${indent}${fields.length ? fields.join(`\n${indent}`) : "pass"}`,
   ) {
     let [fields, imports] = listToPython(node.fields, config);
     let parentType = "";
+    let decorators = "";
 
     if (config.super) {
       parentType = `(${config.super})`;
     }
 
+    if (config.decorators?.length) {
+      decorators =
+        config.decorators.map((d) => d.replace(/^[^@]/m, "@$&")).join("\n") +
+        "\n";
+    }
+
     return [
-      `class ${node.name.value}${parentType}:
+      `${decorators}class ${node.name.value}${parentType}:
 ${indent}${fields.length ? fields.join(`\n${indent}`) : "pass"}`,
       imports,
     ];
@@ -234,6 +248,7 @@ const toPython = (node, config: FromSchemaConfig): [string | null, Imports] => {
 };
 
 export interface FromSchemaConfig {
+  decorators?: string[];
   super?: string;
   extraImports?: Record<string, string[]>;
   extraTypes?: Record<string, string>;
