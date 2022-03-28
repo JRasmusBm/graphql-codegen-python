@@ -4,3 +4,9 @@ generates:
   ./sample_output/_graphql_types.py:
     plugins:
       - "./dist/lib/index.js"
+    config:
+      extraImports:
+        typing:
+          - Dict
+      extraScalars:
+        JSONObject: Dict

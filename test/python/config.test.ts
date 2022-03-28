@@ -50,4 +50,45 @@ class Hello(BaseModel):
     greeting: str`);
     });
   });
+
+  describe("extraScalars", (): void => {
+    it("treats as identifier when not specified", async (): Promise<void> => {
+      const input = `
+    scalar JSONObject
+
+    type Hello {
+      greeting: JSONObject!
+    }
+`;
+
+      const schema = makeExecutableSchema({ typeDefs: input });
+
+      expect(python.fromSchema(schema)).toEqual(`class Hello:
+    greeting: "JSONObject"`);
+    });
+
+    it("maps to the scalar type when supplied", async (): Promise<void> => {
+      const input = `
+    scalar JSONObject
+
+    type Hello {
+      greeting: JSONObject!
+    }
+`;
+
+      const schema = makeExecutableSchema({ typeDefs: input });
+
+      expect(
+        python.fromSchema(schema, {
+          extraImports: {
+            typing: ["Dict"],
+          },
+          extraScalars: { JSONObject: "Dict" },
+        })
+      ).toEqual(`from typing import Dict
+
+class Hello:
+    greeting: Dict`);
+    });
+  });
 });

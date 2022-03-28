@@ -40,6 +40,8 @@ function mergeImports(
   return imports;
 }
 
+const noopHandler = (..._args: any) => [null, {}]
+
 const nodeHandlers = {
   [ExtraKind.OPTIONAL_TYPE]: function handleOptionalTypeNode(
     node,
@@ -52,6 +54,7 @@ const nodeHandlers = {
       mergeImports(imports, { typing: ["Optional"] }),
     ];
   },
+  [Kind.SCALAR_TYPE_DEFINITION]: noopHandler,
   [Kind.NON_NULL_TYPE]: function handleNonNullTypeNode(
     node: NonNullTypeNode,
     config: FromSchemaConfig
@@ -70,7 +73,9 @@ const nodeHandlers = {
     node: NamedTypeNode,
     config: FromSchemaConfig
   ) {
-    return [pythonBuiltinTypes[node.name.value] || `"${node.name.value}"`, {}];
+    const typeMap = { ...pythonBuiltinTypes, ...config.extraScalars };
+
+    return [typeMap[node.name.value] || `"${node.name.value}"`, {}];
   },
   [Kind.FIELD_DEFINITION]: function handleFieldDefinitionNode(
     node: FieldDefinitionNode,
@@ -173,6 +178,7 @@ const toPython = (node, config: FromSchemaConfig): [string | null, Imports] => {
 interface FromSchemaConfig {
   super?: string;
   extraImports?: Record<string, string[]>;
+  extraScalars?: Record<string, string>;
 }
 
 export function fromSchema(
