@@ -99,12 +99,7 @@ const nodeHandlers = {
     let parentType = "";
 
     if (config.super) {
-      if (config.super.module) {
-        imports = mergeImports(imports, {
-          [config.super.module]: [config.super.parentType],
-        });
-      }
-      parentType = `(${config.super.parentType})`;
+      parentType = `(${config.super})`;
     }
 
     return [
@@ -139,6 +134,10 @@ function listToPython(nodeList, config: FromSchemaConfig): [string[], Imports] {
   const items = [];
   let imports = {};
 
+  if (config.extraImports) {
+    imports = mergeImports(imports, config.extraImports);
+  }
+
   for (const node of nodeList || []) {
     const [code, currentImports] = toPython(node, config);
 
@@ -172,7 +171,8 @@ const toPython = (node, config: FromSchemaConfig): [string | null, Imports] => {
 };
 
 interface FromSchemaConfig {
-  super?: { module?: string; parentType: string };
+  super?: string;
+  extraImports?: Record<string, string[]>;
 }
 
 export function fromSchema(
