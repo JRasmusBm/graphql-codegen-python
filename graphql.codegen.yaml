@@ -5,8 +5,10 @@ generates:
     plugins:
       - "./dist/lib/index.js"
     config:
+      super: TypedDict
       extraImports:
         typing:
           - Dict
+          - TypedDict
       extraTypes:
         JSONObject: Dict
