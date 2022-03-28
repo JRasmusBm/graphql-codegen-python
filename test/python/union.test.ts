@@ -18,6 +18,6 @@ union Message = Hello | String
 class Hello:
     message: str
 
-Message = Union[Hello, str]`);
+Message = Union["Hello", str]`);
   });
 });

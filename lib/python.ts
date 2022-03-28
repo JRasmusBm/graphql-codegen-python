@@ -70,7 +70,7 @@ const nodeHandlers = {
     node: NamedTypeNode,
     config: FromSchemaConfig
   ) {
-    return [pythonBuiltinTypes[node.name.value] || node.name.value, {}];
+    return [pythonBuiltinTypes[node.name.value] || `"${node.name.value}"`, {}];
   },
   [Kind.FIELD_DEFINITION]: function handleFieldDefinitionNode(
     node: FieldDefinitionNode,
