@@ -59,6 +59,7 @@ const nodeHandlers = {
     ];
   },
   [Kind.SCALAR_TYPE_DEFINITION]: noopHandler,
+  [Kind.INTERFACE_TYPE_DEFINITION]: noopHandler,
   [Kind.NON_NULL_TYPE]: function handleNonNullTypeNode(
     node: NonNullTypeNode,
     config: FromSchemaConfig
