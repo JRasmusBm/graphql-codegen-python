@@ -1,4 +1,6 @@
 import {
+  EnumTypeDefinitionNode,
+  EnumValueDefinitionNode,
   FieldDefinitionNode,
   GraphQLSchema,
   InputObjectTypeDefinitionNode,
@@ -104,6 +106,27 @@ const nodeHandlers = {
     return [
       `${node.name.value} = Union[${types.join(", ")}]`,
       mergeImports(imports, { typing: ["Union"] }),
+    ];
+  },
+  [Kind.ENUM_VALUE_DEFINITION]: function handleEnumValueDefinitionNode(
+    node: EnumValueDefinitionNode,
+    config: FromSchemaConfig
+  ) {
+    return [`"${node.name.value}"`, {}];
+  },
+  [Kind.ENUM_TYPE_DEFINITION]: function handleEnumTypeDefinitionNode(
+    node: EnumTypeDefinitionNode,
+    config: FromSchemaConfig
+  ) {
+    let [values, imports] = listToPython(node.values, config);
+
+    if (!values.length) {
+      return [null, {}];
+    }
+
+    return [
+      `${node.name.value} = Literal[${values.join(", ")}]`,
+      mergeImports({}, mergeImports(imports, { typing: ["Literal"] })),
     ];
   },
   [Kind.INPUT_OBJECT_TYPE_DEFINITION]:
