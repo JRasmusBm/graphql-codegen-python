@@ -16,7 +16,7 @@ describe("Built-in types", (): void => {
     { graphqlType: "ID!", pythonType: "str" },
   ];
 
-  cases.forEach(({ graphqlType, pythonType, imports }) => {
+  cases.forEach(({ graphqlType, pythonType }) => {
     it(`${graphqlType} -> ${pythonType}`, async (): Promise<void> => {
       const input = `
     type Hello {
