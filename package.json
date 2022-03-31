@@ -1,6 +1,6 @@
 {
   "name": "graphql-codegen-ariadne",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Generate Python types from GraphQL files",
   "main": "lib/index.ts",
   "scripts": {
